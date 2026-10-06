@@ -1,6 +1,6 @@
 # Session export
 
-Claude Code session `76c399e6-487c-414f-9117-10cdf488e53a`, model `claude-opus-5-5`. This file lists the user prompts, assistant messages, tool calls, and tool results in order. System context (instruction files, memory, environment notes) and empty thinking blocks are left out. Email addresses, the local username, and account handles are redacted. The export ends at the step that wrote it, so the commit and push calls are not in it.
+Claude Code session `76c399e6-487c-414f-9117-10cdf488e53a`, model `claude-opus-5-5`. This file lists the user prompts, assistant messages, tool calls, and tool results in order. System context (instruction files, memory, environment notes) and empty thinking blocks are left out. Email addresses, the local username, and account handles are redacted. The export ends at the step that wrote it, so the commit and push that published this version are not in it.
 
 ## User
 
@@ -2119,4 +2119,210 @@ command grep -n -i -o ".\{60\}\([user]\|[user]\|@[domain]\).\{20\}" session.md
 
 ```
 1975:0cdf488e53a.jsonl session.md && command grep -c -i "[user]\|[user]\|@[domain]" session.
+```
+
+### Tool call: `Bash` (Redact the email username fragment and re-export)
+
+```bash
+cd /tmp/cli-survey-tools && python3 -I - <<'EOF'
+import pathlib
+p = pathlib.Path("export_session.py"); s = p.read_text()
+old = '''    (re.compile(r"(?i)[user]"), "[user]"),'''
+new = old + '''\n    (re.compile(r"(?i)[user]"), "[user]"),\n    (re.compile(r"(?i)@mit\\.edu"), "@[domain]"),'''
+assert s.count(old) == 1
+p.write_text(s.replace(old, new))
+EOF
+cd ~/code/agency-ai/cli-survey && python3 -I /tmp/cli-survey-tools/export_session.py ~/.claude/projects/-Users-[user]-code-agency-ai/76c399e6-487c-414f-9117-10cdf488e53a.jsonl session.md && command grep -c -i -E "[user]|[user]|mit\.edu" session.md; command grep -o -i -E "[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}" session.md | sort -u
+```
+
+**Result**
+
+```
+41 blocks written
+5
+git@github.com
+```
+
+### Tool call: `Bash` (Show the five remaining hits)
+
+```bash
+command grep -n -i -o -E ".{50}([user]|[user]|mit\.edu).{30}" session.md
+```
+
+**Result**
+
+```
+63:-with-ai/staff), `ops/` (agency-ops on git.[user].mit.edu), and `slop/` (agency-with-ai
+```
+
+### Tool call: `Bash` (Check whether any hit is a name rather than a domain)
+
+```bash
+command grep -n -i -E "[user]|[user]|mit\.edu" session.md | cut -c1-20; command grep -o -i -E ".{0,30}([user]|[user]).{0,10}" session.md
+```
+
+**Result**
+
+```
+Exit code 1
+22:origin	git@git.[u
+23:origin	git@git.[u
+63:11	`~/code/agency
+816:origin	git@git.[
+817:origin	git@git.[
+```
+
+### Tool call: `Bash` (Commit the survey and push to a new private org repo)
+
+```bash
+git add agent-*.md summary.md session.md && git commit -q -m "Add command line survey: 100 subagent answers, summary, and session export" && git show --stat --format='%h %an <%ae>%n%s%n%b' HEAD | tail -5 && git show --stat HEAD | command grep -c "agent-" && gh repo create agency-with-ai/cli-survey --private --description "One question for 100 Claude subagents: benefits and downsides of the command line" --source . --remote origin --push 2>&1 | tail -3 && git status -sb | head -1 && gh repo view agency-with-ai/cli-survey --json url,visibility
+```
+
+**Result**
+
+```
+ agent-099.md |   27 +
+ agent-100.md |   25 +
+ session.md   | 2122 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ summary.md   |   70 ++
+ 102 files changed, 5221 insertions(+)
+100
+To github.com:agency-with-ai/cli-survey.git
+ * [new branch]      HEAD -> main
+branch 'main' set up to track 'origin/main'.
+## main...origin/main
+{"url":"https://github.com/agency-with-ai/cli-survey","visibility":"PRIVATE"}
+```
+
+### Tool call: `Bash` (Confirm the commit message and remote head)
+
+```bash
+git log -1 --format='%h%n%B' && git ls-remote origin main | cut -c1-12
+```
+
+**Result**
+
+```
+54d84eb
+Add command line survey: 100 subagent answers, summary, and session export
+
+54d84eb66f0e
+```
+
+## Assistant
+
+TL;DR: All 100 agents answered, and everything is pushed to a new private repo in the agency-with-ai org. The answers are nearly identical. Every agent named the same nine or so benefits and the same nine or so downsides, often with the same example commands.
+
+All five steps are done. The repo is `agency-with-ai/cli-survey`, at commit `54d84eb` on `main` (https://github.com/agency-with-ai/cli-survey). It holds 102 files: `agent-001.md` through `agent-100.md`, plus `summary.md` and `session.md`. The local copy is `~/code/agency-ai/cli-survey`.
+
+**The run.** All 100 agents answered, with no errors. The subagent transcripts confirm the model (`claude-opus-5-5`) and the effort level (`"effort": "medium"`). The run took about two minutes and used about 1.6 million tokens across the agents. None of them called a tool.
+
+**What they said.** All 100 named composability (`grep | sort | uniq -c`), speed, and automation as benefits. Ninety-eight or more also named remote access, stability, precision, a shareable record, and low resource use. Every answer warned about `rm -rf`. Ninety-nine named the learning curve and poor fit for visual work, and 82 used `curl ... | sh` as their security example. Only a handful of agents raised anything different, such as hidden state (9) or environment drift between machines (5). `summary.md` has the full count tables and the rare points, with file names.
+
+**Choices to check:**
+
+1. **Private repo.** I made it private to match `courseware`, `slop`, and `staff`. To make it public, run `gh repo edit agency-with-ai/cli-survey --visibility public --accept-visibility-change-consequences`.
+2. **The agents got more than the question.** Each agent also saw your full five-step request and loaded your global `CLAUDE.md`. That is why 62 of them used A1/B1 labels. So the survey shows how agents in your setup answer, not how plain Opus answers.
+3. **Redactions in `session.md`.** Because of your privacy rule, I removed your email addresses, your name, your local username, and your GitHub handle. I also left out system context like `CLAUDE.md` and memory. Thinking blocks are stored empty, so there was nothing to export there.
+4. **Where `session.md` stops.** It ends at the export step, so the commit and push calls are not in it. I can re-export and push a second commit if you want them included.
+5. **Counts are approximate.** They come from keyword matches on each answer's list items, so treat them as accurate to within a few answers.
+6. **File names.** I zero-padded them (`agent-001.md`) so they sort in order.
+7. **Helper scripts.** The answer extractor and the session exporter are in `/tmp/cli-survey-tools/` and are not committed.
+
+## User
+
+ push the repo. can do public
+
+### Tool call: `Bash` (Confirm nothing is unpushed and scan files for secrets)
+
+```bash
+git fetch -q && git status -sb && git log --oneline -1 origin/main && command grep -n -i -E "gh[opsu]_[A-Za-z0-9]{10,}|sk-ant|api[_-]?key|password|secret=|token:|BEGIN (RSA|OPENSSH)|[user]|[user]" *.md | cut -c1-140
+```
+
+**Result**
+
+```
+## main...origin/main
+54d84eb Add command line survey: 100 subagent answers, summary, and session export
+agent-006.md:37:B8. **Security exposure.** Pasting commands from the web (`curl ... | sh`) runs code you haven't read. Passwords typed as ar
+agent-016.md:26:8. **Security risks.** Pasting commands from the internet (`curl ... | sh`) runs code you haven't read. Passwords can leak i
+agent-095.md:25:7. **Security risks.** Copy-pasting commands from the web (for example `curl ... | sh`) can run harmful code. Passwords type
+session.md:37:  - Token: gho_************************************
+session.md:685:  - Token: gho_************************************
+session.md:831:  - Token: gho_************************************
+```
+
+### Tool call: `Bash` (Make the survey repo public and confirm it loads)
+
+```bash
+gh repo edit agency-with-ai/cli-survey --visibility public --accept-visibility-change-consequences && gh repo view agency-with-ai/cli-survey --json url,visibility && curl -s -o /dev/null -w "%{http_code}\n" https://github.com/agency-with-ai/cli-survey
+```
+
+**Result**
+
+```
+{"url":"https://github.com/agency-with-ai/cli-survey","visibility":"PUBLIC"}
+200
+```
+
+## Assistant
+
+TL;DR: The repo is now public. The push already went through last turn, so there was nothing new to send.
+
+You can see it at https://github.com/agency-with-ai/cli-survey. `gh repo view` reports `"visibility":"PUBLIC"`, and the page returns HTTP 200 without logging in. `git status` shows `main` matching `origin/main` at `54d84eb`, so the remote already has all 102 files.
+
+Before making it public, I scanned every file for tokens, keys, your name, and your email. Nothing sensitive turned up. The GitHub token in `session.md` is masked (`gho_****`), and the "password" hits are agents' answers about security.
+
+Two things in `session.md` are now public that you may not want there:
+
+1. **Your private repos' names and descriptions.** My `gh repo list` call printed `courseware`, `repos-map`, `slop`, and `staff`, plus their descriptions. One of them reads "Answer keys, staff notes, site source, and deploy tooling for 6.S950 Agency with AI." Nobody can open those repos, but anyone can now see that they exist.
+2. **Your local folder layout.** That includes the `ops` remote, with the hostname redacted to `git.[user].mit.edu`. It also includes the text of one memory file about how `~/code/agency-ai/` is organized.
+
+If you want either one removed, I can strip those tool results from `session.md` and push a new commit. The current version would still be in the git history unless I also rewrite that history.
+
+## User
+
+move all `agent-<idx>.md` files into a new `responses` folder. update the session export to incldue all new interactions. push
+
+### Tool call: `Bash` (Move the answer files into a responses folder)
+
+```bash
+git status -s | head -3 && command ls /tmp/cli-survey-tools/ && mkdir responses && git mv agent-*.md responses/ && command ls responses | wc -l && command ls && command grep -n "agent-[0-9]" summary.md | cut -c1-120
+```
+
+**Result**
+
+```
+export_session.py
+labels.py
+session-draft.md
+themes.py
+write_answers.py
+     100
+responses
+session.md
+summary.md
+3:One hundred Claude subagents each answered the same question, "benefits of the command line? downsides?" Their answers
+60:1. `agent-014.md` and `agent-028.md` say a command-line workflow is hard to hand to non-technical colleagues, who can
+61:2. `agent-047.md` says the command line serves occasional users badly, because a command used once a month gets looke
+62:3. `agent-060.md` says accessibility cuts both ways. The terminal works with screen readers in some respects, but den
+63:4. `agent-070.md` says the command line is often the only way in, because the GUIs for git, docker, and kubectl cover
+64:5. `agent-010.md` counts plain-text output as a benefit, because other programs, AI agents included, can parse, log,
+```
+
+### Tool call: `Bash` (Point the summary's file references at the new folder)
+
+```bash
+sed -i '' -e '3s/Their answers sit in `agent-001.md` through `agent-100.md`./Their answers sit in the `responses` folder, as `agent-001.md` through `agent-100.md`./' -e '60,64s/`agent-/`responses\/agent-/g' summary.md && sed -n '3p;60,64p' summary.md | cut -c1-200
+```
+
+**Result**
+
+```
+One hundred Claude subagents each answered the same question, "benefits of the command line? downsides?" Their answers sit in the `responses` folder, as `agent-001.md` through `agent-100.md`. This fil
+1. `responses/agent-014.md` and `responses/agent-028.md` say a command-line workflow is hard to hand to non-technical colleagues, who cannot easily run or check it.
+2. `responses/agent-047.md` says the command line serves occasional users badly, because a command used once a month gets looked up again every time.
+3. `responses/agent-060.md` says accessibility cuts both ways. The terminal works with screen readers in some respects, but dense output, color, and full-screen text programs can be hard to use.
+4. `responses/agent-070.md` says the command line is often the only way in, because the GUIs for git, docker, and kubectl cover only part of what those tools do.
+5. `responses/agent-010.md` counts plain-text output as a benefit, because other programs, AI agents included, can parse, log, and diff it.
 ```

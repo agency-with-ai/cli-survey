@@ -1,6 +1,6 @@
 # Command line survey: summary of 100 answers
 
-One hundred Claude subagents each answered the same question, "benefits of the command line? downsides?" Their answers sit in `agent-001.md` through `agent-100.md`. This file summarizes them.
+One hundred Claude subagents each answered the same question, "benefits of the command line? downsides?" Their answers sit in the `responses` folder, as `agent-001.md` through `agent-100.md`. This file summarizes them.
 
 ## Short answer
 
@@ -57,11 +57,11 @@ Ninety answers open with the learning curve, and the other 10 open with discover
 
 ## Points only one or two answers make
 
-1. `agent-014.md` and `agent-028.md` say a command-line workflow is hard to hand to non-technical colleagues, who cannot easily run or check it.
-2. `agent-047.md` says the command line serves occasional users badly, because a command used once a month gets looked up again every time.
-3. `agent-060.md` says accessibility cuts both ways. The terminal works with screen readers in some respects, but dense output, color, and full-screen text programs can be hard to use.
-4. `agent-070.md` says the command line is often the only way in, because the GUIs for git, docker, and kubectl cover only part of what those tools do.
-5. `agent-010.md` counts plain-text output as a benefit, because other programs, AI agents included, can parse, log, and diff it.
+1. `responses/agent-014.md` and `responses/agent-028.md` say a command-line workflow is hard to hand to non-technical colleagues, who cannot easily run or check it.
+2. `responses/agent-047.md` says the command line serves occasional users badly, because a command used once a month gets looked up again every time.
+3. `responses/agent-060.md` says accessibility cuts both ways. The terminal works with screen readers in some respects, but dense output, color, and full-screen text programs can be hard to use.
+4. `responses/agent-070.md` says the command line is often the only way in, because the GUIs for git, docker, and kubectl cover only part of what those tools do.
+5. `responses/agent-010.md` counts plain-text output as a benefit, because other programs, AI agents included, can parse, log, and diff it.
 
 ## How much the answers vary
 
